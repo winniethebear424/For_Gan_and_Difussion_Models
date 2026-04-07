@@ -105,13 +105,15 @@ class DiffusionTrainer(Trainer):
         loss_meter = AverageMeter()
         iter_meter = AverageMeter()
 
+        print("before fixed_eval_batch")
         self.fixed_eval_batch.to(self.device)
+        print("after fixed_eval_batch")
 
 
         for epoch in range(self.n_epochs):
-
+            print(f"epoch {epoch} start")
             for i, (data, _ ) in enumerate(self.train_loader):
-
+                print(f"batch {i} loaded")
                 self.net.train()
                 start = time.time()
 

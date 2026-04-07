@@ -117,8 +117,9 @@ class GANTrainer(Trainer):
         #  2. get discriminator assessment on fakes and compute loss using self.criterion
         #############################################################################
         # 1. use generator with new latents to obtain fakes. create labels
+
         fake_latents = torch.randn(batch_size, latent_dim, device=self.device)
-        fake_labels = torch.ones(batch_size, 1, device=self.device)
+        fake_labels = torch.full((batch_size, 1), 0.9, device=self.device)
         
         # 2. get discriminator assessment on fakes and compute loss using self.criterion
         fake_images = self.generator(fake_latents)
@@ -173,24 +174,25 @@ class GANTrainer(Trainer):
                 #############################################################################
                 
                 # --- Train discriminator ---
-                k = 2
-                for _ in range(k):  # k=2 or k=3
-                    self.optimizer_disc.zero_grad()
-                    # 0. Implement compute_loss_real and compute_loss_fake
-                    # 1. Compute and combine the fake and real losses and take step to optimize discriminator.
-                    loss_real = self.compute_loss_real(data, batch_size)
-                    loss_fake = self.compute_loss_fake(batch_size, latent_dim)
-                    loss_d = loss_real + loss_fake
-                    loss_d.backward()
-                    self.optimizer_disc.step()
+     
+                self.optimizer_disc.zero_grad()
+                # 0. Implement compute_loss_real and compute_loss_fake
+                # 1. Compute and combine the fake and real losses and take step to optimize discriminator.
+                loss_real = self.compute_loss_real(data, batch_size)
+                loss_fake = self.compute_loss_fake(batch_size, latent_dim)
+                loss_d = loss_real + loss_fake
+                loss_d.backward()
+                self.optimizer_disc.step()
                 
                 # train generator
-                self.optimizer_gen.zero_grad()
-                # 0. Implement compute_loss_gen
-                # 1. compute the generator loss and take step to optimize generator.
-                loss_gen = self.compute_loss_gen(batch_size, latent_dim)
-                loss_gen.backward()
-                self.optimizer_gen.step()
+                k = 2
+                for _ in range(k):
+                    self.optimizer_gen.zero_grad()
+                    # 0. Implement compute_loss_gen
+                    # 1. compute the generator loss and take step to optimize generator.
+                    loss_gen = self.compute_loss_gen(batch_size, latent_dim)
+                    loss_gen.backward()
+                    self.optimizer_gen.step()
                 
                 #############################################################################
                 #                              END OF YOUR CODE                             #
