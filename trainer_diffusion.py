@@ -105,15 +105,15 @@ class DiffusionTrainer(Trainer):
         loss_meter = AverageMeter()
         iter_meter = AverageMeter()
 
-        print("before fixed_eval_batch")
+        # print("before fixed_eval_batch")
         self.fixed_eval_batch.to(self.device)
-        print("after fixed_eval_batch")
+        # print("after fixed_eval_batch")
 
 
         for epoch in range(self.n_epochs):
-            print(f"epoch {epoch} start")
+            # print(f"epoch {epoch} start")
             for i, (data, _ ) in enumerate(self.train_loader):
-                print(f"batch {i} loaded")
+                # print(f"batch {i} loaded")
                 self.net.train()
                 start = time.time()
 
@@ -186,27 +186,22 @@ class DiffusionTrainer(Trainer):
         #############################################################################
     @torch.no_grad()
     def sample_timestep(self, x, t):
-        batch_size = x.size(0)
-        t_flat = t.view(-1)
+        batch_size = x.size(0)          # ← 从 x 取
+        t_flat = t.view(-1)[:batch_size]  # ← 截断 t 到 x 的 batch size
 
         alpha_t     = self.alpha[t_flat].view(batch_size, 1, 1, 1)
         alpha_bar_t = self.alphas_bar[t_flat].view(batch_size, 1, 1, 1)
         beta_t      = self.beta[t_flat].view(batch_size, 1, 1, 1)
 
-        # 1. predict noise
-        predicted_noise = self.net(x, t)
+        predicted_noise = self.net(x, t_flat)
 
-        # 2. compute mean
         coef1 = 1 / torch.sqrt(alpha_t)
         coef2 = (1 - alpha_t) / torch.sqrt(1 - alpha_bar_t)
         mean  = coef1 * (x - coef2 * predicted_noise)
 
-        # 3. add variance only when t > 0
         noise   = torch.randn_like(x)
         sigma_t = torch.sqrt(beta_t)
         x_prev  = mean + sigma_t * noise * (t_flat > 0).float().view(-1, 1, 1, 1)
-
-        return x_prev
 
         #############################################################################
         #                              END OF YOUR CODE                             #
